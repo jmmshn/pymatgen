@@ -222,10 +222,12 @@ class InsertionElectrode(AbstractElectrode):
         data = []
         for pair in self._select_in_voltage_range(min_voltage, max_voltage):
             if pair.muO2_discharge is not None:
-                data.append(pair.pair.muO2_discharge)
+                data.extend(pair.muO2_discharge)
             if pair.muO2_charge is not None:
-                data.append(pair.muO2_charge)
-        return max(data) if len(data) > 0 else None
+                data.extend(pair.muO2_charge)
+        if len(data) == 0:
+            return None
+        return min(pair, key=lambda x:x['chempot']) if len(pair) > 0 else None
 
     def get_min_muO2(self, min_voltage=None, max_voltage=None):
         """
@@ -243,11 +245,11 @@ class InsertionElectrode(AbstractElectrode):
         """
         data = []
         for pair in self._select_in_voltage_range(min_voltage, max_voltage):
-            if pair.pair.muO2_discharge is not None:
-                data.append(pair.pair.muO2_discharge)
+            if pair.muO2_discharge is not None:
+                data.extend(pair.muO2_discharge)
             if pair.muO2_charge is not None:
-                data.append(pair.muO2_charge)
-        return min(data) if len(data) > 0 else None
+                data.extend(pair.muO2_charge)
+        return min(pair, key=lambda x:x['chempot']) if len(pair) > 0 else None
 
     def get_sub_electrodes(self, adjacent_only=True, include_myself=True):
         """
@@ -326,10 +328,15 @@ class InsertionElectrode(AbstractElectrode):
              "framework": self._vpairs[0].framework.to_data_dict,
              "formula_charge": chg_comp.reduced_formula,
              "formula_discharge": dischg_comp.reduced_formula,
+             "id_charge": self.fully_charged_entry.entry_id,
+             "id_discharge": self.fully_discharged_entry.entry_id,
              "fracA_charge": chg_comp.get_atomic_fraction(ion),
              "fracA_discharge": dischg_comp.get_atomic_fraction(ion),
              "max_instability": self.get_max_instability(),
              "min_instability": self.get_min_instability()}
+        if print_subelectrodes: # safety data for each stable entry
+            d['stable_entries'] = [{'entry_id' : entry.entry_id, 'muO2': entry.data['muO2'], 'e_above_hull' : entry.data['decomposition_energy']} for entry in self.get_stable_entries()]
+
         if print_subelectrodes:
             f_dict = lambda c: c.as_dict_summary(print_subelectrodes=False)
             d["adj_pairs"] = list(map(f_dict,
