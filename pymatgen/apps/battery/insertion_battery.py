@@ -222,9 +222,9 @@ class InsertionElectrode(AbstractElectrode):
         data = []
         for pair in self._select_in_voltage_range(min_voltage, max_voltage):
             if pair.muO2_discharge is not None:
-                data.extend(pair.muO2_discharge)
+                data.append(pair.muO2_discharge)
             if pair.muO2_charge is not None:
-                data.extend(pair.muO2_charge)
+                data.append(pair.muO2_charge)
         if len(data) == 0:
             return None
         return min(pair, key=lambda x:x['chempot']) if len(pair) > 0 else None
@@ -473,6 +473,7 @@ class InsertionVoltagePair(AbstractVoltagePair):
 
         self.muO2_charge = entry_charge.data.get("muO2", None)
         self.muO2_discharge = entry_discharge.data.get("muO2", None)
+        print("Discharge MuO2", entry_discharge.data.get("muO2", None))
 
         self.entry_charge = entry_charge
         self.entry_discharge = entry_discharge
