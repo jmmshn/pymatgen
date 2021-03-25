@@ -146,11 +146,15 @@ class ConstantEnergyAdjustment(EnergyAdjustment):
     def normalize(self, factor):
         """
         Normalize energy adjustment (in place), dividing value/uncertainty by a
-        factor.
+        factor.  If the factor is zero set the values to None
         :param factor: factor to divide by
         """
-        self._value /= factor
-        self._uncertainty /= factor
+        if factor == 0:
+            self._value = None
+            self._uncertainty = None
+        else:
+            self._value /= factor
+            self._uncertainty /= factor
 
 
 class ManualEnergyAdjustment(ConstantEnergyAdjustment):
@@ -697,7 +701,7 @@ class ComputedStructureEntry(ComputedEntry):
         d = super().normalize(mode).as_dict()
         d["structure"] = self.structure.as_dict()
         entry = self.from_dict(d)
-        entry._composition /= factor
+        entry.set_composition(entry.composition / factor)
         return entry
 
 
